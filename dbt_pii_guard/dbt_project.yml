@@ -1,0 +1,16 @@
+name: 'dbt_pii_guard'
+version: '1.0.0'
+
+profile: 'dbt_pii_guard'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+models:
+  dbt_pii_guard:
