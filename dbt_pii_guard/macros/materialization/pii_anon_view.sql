@@ -1,29 +1,8 @@
-{% materialization pii_anon_table, default %}
+{% materialization pii_anon_view, default %}
     {% set existing_relation = adapter.get_relation(database=this.database, schema=this.schema, identifier=this.identifier) %}
-    {% set target_relation = this.incorporate(type='table') %}
-
-    {% set can_exchange = target_relation.type == 'table' and target.type in ('postgres', 'greenplum', 'postgresql') %}
-    {% set intermediate_relation = make_intermediate_relation(target_relation) %}
-    {% set preexisting_intermediate_relation = adapter.get_relation(
-        database=intermediate_relation.database, 
-        schema=intermediate_relation.schema, 
-        identifier=intermediate_relation.identifier
-    ) %}
-
-    {% set backup_relation = none %}
-    {% if can_exchange and existing_relation %}
-        {% set backup_relation = make_backup_relation(target_relation, 'table') %}
-    {% endif %}
-    {% set preexisting_backup_relation = adapter.get_relation(
-        database=backup_relation.database, 
-        schema=backup_relation.schema, 
-        identifier=backup_relation.identifier
-    ) if backup_relation else none %}
+    {% set target_relation = this.incorporate(type='view') %}
 
     {% set grant_config = config.get('grants') %}
-
-    {{ drop_relation_if_exists(preexisting_intermediate_relation) }}
-    {{ drop_relation_if_exists(preexisting_backup_relation) }}
 
     {{ run_hooks(pre_hooks, inside_transaction=False) }}
     {{ run_hooks(pre_hooks, inside_transaction=True) }}
@@ -52,14 +31,11 @@
     {% set select_clause = "select " ~ final_columns | join(', ') %}
     {% set wrapped_sql = "with source_data as (" ~ sql ~ ") " ~ select_clause ~ " from source_data" %}
 
-    {% call statement('main') %}
-        {{ get_create_table_as_sql(False, intermediate_relation, wrapped_sql) }}
-    {% endcall %}
+    {{ drop_relation_if_exists(existing_relation) }}
 
-    {% if existing_relation and backup_relation %}
-        {{ adapter.rename_relation(existing_relation, backup_relation) }}
-    {% endif %}
-    {{ adapter.rename_relation(intermediate_relation, target_relation) }}
+    {% call statement('main') %}
+        {{ get_create_view_as_sql(target_relation, wrapped_sql) }}
+    {% endcall %}
 
     {% if audit_records %}
         {% set count_sql %}SELECT COUNT(*) as cnt FROM {{ target_relation }}{% endset %}
@@ -87,10 +63,6 @@
 
     {% if target.type in ('postgres', 'greenplum', 'postgresql') %}
         {{ adapter.commit() }}
-    {% endif %}
-
-    {% if backup_relation %}
-        {{ drop_relation_if_exists(backup_relation) }}
     {% endif %}
 
     {{ run_hooks(post_hooks, inside_transaction=False) }}
