@@ -7,5 +7,5 @@
 {% endmacro %}
 
 {% macro arenadatadb__shuffle_pii(field) %}
-    
+    (ARRAY_AGG({{ field }} ORDER BY RANDOM()) OVER ())[ROW_NUMBER() OVER ()]
 {% endmacro %}
