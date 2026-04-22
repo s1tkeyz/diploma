@@ -1,0 +1,13 @@
+version: 2
+
+sources:
+  - name: srcdata
+    database: traindb
+    schema: srcdata
+
+    tables:
+      - name: t_client_data
+      - name: t_loan_data
+      - name: t_client_account
+      - name: t_transactions
+      - name: t_account_data

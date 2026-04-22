@@ -1,0 +1,2 @@
+packages:
+  - local: /mnt/diploma/dbt_pii_guard

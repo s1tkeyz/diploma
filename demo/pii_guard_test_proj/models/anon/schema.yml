@@ -1,0 +1,14 @@
+models:
+  - name: anon_account_list
+    columns:
+      - name: owner_inn
+        meta:
+          PII_TYPE: inn
+          PII_STRATEGY: mask
+          PII_KEEP_JOINABLE: false
+      - name: account_number
+        meta:
+          PII_TYPE: account_number
+          PII_STRATEGY: mask
+          PII_KEEP_JOINABLE: true
+      - name: is_active
